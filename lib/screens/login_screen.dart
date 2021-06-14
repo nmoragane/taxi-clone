@@ -4,7 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:uber_user/main.dart';
 import 'package:uber_user/screens/mains_creen.dart';
 import 'package:uber_user/screens/signup_screen.dart';
+import 'package:uber_user/widgets/progressDialog.dart';
 
+// ignore: must_be_immutable
 class LoginScreen extends StatelessWidget {
   TextEditingController passwordTextEditingController = TextEditingController();
   TextEditingController emailTextEditingController = TextEditingController();
@@ -126,10 +128,23 @@ class LoginScreen extends StatelessWidget {
 
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
 
-  loginAndAuthenticateUser(BuildContext context) async {
-    final User firebaseUser = (await _firebaseAuth.signInWithEmailAndPassword(
-            email: emailTextEditingController.text,
-            password: passwordTextEditingController.text))
+  void loginAndAuthenticateUser(BuildContext context) async {
+    showDialog(
+      barrierDismissible: false,
+      context: context,
+      builder: (BuildContext context) {
+        return ProgressDialog(
+          message: "Authenticating, Please Wait",
+        );
+      },
+    );
+    final User firebaseUser = (await _firebaseAuth
+            .signInWithEmailAndPassword(
+                email: emailTextEditingController.text,
+                password: passwordTextEditingController.text)
+            .catchError((errMsg) {
+      Navigator.pop(context);
+    }))
         .user;
 
     if (_firebaseAuth != null) {

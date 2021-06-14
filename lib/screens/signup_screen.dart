@@ -5,7 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:uber_user/screens/login_screen.dart';
 import 'package:uber_user/screens/mains_creen.dart';
+import 'package:uber_user/widgets/progressDialog.dart';
 
+// ignore: must_be_immutable
 class RegistrationScreen extends StatelessWidget {
   static const String idScreen = "register";
 
@@ -181,11 +183,23 @@ class RegistrationScreen extends StatelessWidget {
 
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
   void registerNewUser(BuildContext context) async {
-    final User firebaseUser =
-        (await _firebaseAuth.createUserWithEmailAndPassword(
+    showDialog(
+      barrierDismissible: false,
+      context: context,
+      builder: (BuildContext context) {
+        return ProgressDialog(
+          message: "Registering, Please Wait",
+        );
+      },
+    );
+    final User firebaseUser = (await _firebaseAuth
+            .createUserWithEmailAndPassword(
                 email: emailTextEditingController.text,
-                password: passwordTextEditingController.text))
-            .user;
+                password: passwordTextEditingController.text)
+            .catchError((errMsg) {
+      Navigator.pop(context);
+    }))
+        .user;
 
     if (_firebaseAuth != null) {
       //success
