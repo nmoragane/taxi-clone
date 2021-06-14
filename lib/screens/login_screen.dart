@@ -1,7 +1,14 @@
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:uber_user/main.dart';
+import 'package:uber_user/screens/mains_creen.dart';
 import 'package:uber_user/screens/signup_screen.dart';
 
 class LoginScreen extends StatelessWidget {
+  TextEditingController passwordTextEditingController = TextEditingController();
+  TextEditingController emailTextEditingController = TextEditingController();
+
   static const String idScreen = "login";
 
   @override
@@ -39,6 +46,7 @@ class LoginScreen extends StatelessWidget {
                   height: 1.0,
                 ),
                 TextField(
+                  controller: emailTextEditingController,
                   keyboardType: TextInputType.emailAddress,
                   decoration: InputDecoration(
                     labelText: "Email",
@@ -58,6 +66,7 @@ class LoginScreen extends StatelessWidget {
                   height: 1.0,
                 ),
                 TextField(
+                  controller: passwordTextEditingController,
                   obscureText: true,
                   decoration: InputDecoration(
                     labelText: "Password",
@@ -78,7 +87,9 @@ class LoginScreen extends StatelessWidget {
                 ),
                 // ignore: deprecated_member_use
                 RaisedButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    loginAndAuthenticateUser(context);
+                  },
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(24.0)),
                   color: Colors.yellow,
@@ -111,5 +122,34 @@ class LoginScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
+
+  loginAndAuthenticateUser(BuildContext context) async {
+    final User firebaseUser = (await _firebaseAuth.signInWithEmailAndPassword(
+            email: emailTextEditingController.text,
+            password: passwordTextEditingController.text))
+        .user;
+
+    if (_firebaseAuth != null) {
+      //success
+      usersRef
+          .child(firebaseUser.uid)
+          .once()
+          .then((value) => (DataSnapshot snap) {
+                if (snap.value != null) {
+                  Navigator.pushNamedAndRemoveUntil(
+                      context, MainScreen.idScreen, (route) => false);
+                  displayToastMsg("Logged In!", context);
+                } else {
+                  _firebaseAuth.signOut();
+                  displayToastMsg("No such Account", context);
+                }
+              });
+    } else {
+      //err
+      displayToastMsg("User is not created", context);
+    }
   }
 }

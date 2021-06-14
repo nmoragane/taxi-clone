@@ -1,8 +1,10 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:uber_user/main.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:uber_user/screens/login_screen.dart';
+import 'package:uber_user/screens/mains_creen.dart';
 
 class RegistrationScreen extends StatelessWidget {
   static const String idScreen = "register";
@@ -132,8 +134,16 @@ class RegistrationScreen extends StatelessWidget {
                     if (nameTextEditingController.text.length < 4) {
                       Fluttertoast.showToast(
                           msg: "Name must be more than 3 characters");
+                    } else if (!emailTextEditingController.text.contains("@")) {
+                      displayToastMsg("Email is invalid", context);
+                    } else if (phoneTextEditingController.text.isEmpty) {
+                      displayToastMsg("Add phone number", context);
+                    } else if (passwordTextEditingController.text.length < 6) {
+                      displayToastMsg(
+                          "Password must be atleast 6 characters", context);
+                    } else {
+                      registerNewUser(context);
                     }
-                    registerNewUser(context);
                   },
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(24.0)),
@@ -179,8 +189,21 @@ class RegistrationScreen extends StatelessWidget {
 
     if (_firebaseAuth != null) {
       //success
+
+      Map userDataMap = {
+        "name": nameTextEditingController.text.trim(),
+        "email": emailTextEditingController.text.trim(),
+        "phone": phoneTextEditingController.text.trim(),
+      };
+
+      usersRef.child(firebaseUser.uid).set(userDataMap);
+      displayToastMsg("Congratulations!", context);
+
+      Navigator.pushNamedAndRemoveUntil(
+          context, MainScreen.idScreen, (route) => false);
     } else {
       //err
+      displayToastMsg("User is not created", context);
     }
   }
 }

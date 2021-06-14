@@ -1,14 +1,18 @@
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:uber_user/screens/login_screen.dart';
 import 'package:uber_user/screens/mains_creen.dart';
 import 'package:uber_user/screens/signup_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 
-void main() {
+void main() async {
   runApp(MyApp());
-  Firebase.initializeApp();
+  await Firebase.initializeApp();
 }
+
+DatabaseReference usersRef =
+    FirebaseDatabase.instance.reference().child("users");
 
 class MyApp extends StatelessWidget {
   @override
