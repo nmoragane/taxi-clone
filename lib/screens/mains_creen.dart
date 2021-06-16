@@ -1,7 +1,9 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:uber_user/widgets/Divider.dart';
 
 class MainScreen extends StatefulWidget {
   static const String idScreen = "main";
@@ -14,6 +16,30 @@ class _MainScreenState extends State<MainScreen> {
   Completer<GoogleMapController> _controllerGoogleMap = Completer();
   GoogleMapController newGoogleMapController;
 
+  GlobalKey<ScaffoldState> scaffoldKey = new GlobalKey<ScaffoldState>();
+
+  Position currentPosition;
+  var geoLocator = Geolocator();
+  double bottomPaddingOfMap = 0;
+
+  void locatePosition() async {
+    Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high);
+    currentPosition = position;
+
+    LatLng latLatPosition = LatLng(position.latitude, position.longitude);
+
+    CameraPosition cameraPosition = new CameraPosition(
+      target: latLatPosition,
+      zoom: 14,
+    );
+
+    newGoogleMapController
+        .animateCamera(CameraUpdate.newCameraPosition(cameraPosition));
+
+    locatePosition();
+  }
+
   static final CameraPosition _kGooglePlex = CameraPosition(
     target: LatLng(37.42796133580664, -122.085749655962),
     zoom: 14.4746,
@@ -22,8 +48,83 @@ class _MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: scaffoldKey,
       appBar: AppBar(
         title: Text('Main Screen'),
+      ),
+      drawer: Container(
+        color: Colors.white,
+        width: 255.0,
+        child: Drawer(
+          child: ListView(
+            children: [
+              Container(
+                height: 165.0,
+                child: DrawerHeader(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                  ),
+                  child: Row(
+                    children: [
+                      Image.asset(
+                        "UberResources/images/user_icon.png",
+                        height: 35.0,
+                        width: 65.0,
+                      ),
+                      SizedBox(
+                        width: 16.0,
+                      ),
+                      Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            "Profile Name",
+                            style: TextStyle(
+                              fontSize: 16.0,
+                            ),
+                          ),
+                          SizedBox(
+                            height: 6.0,
+                          ),
+                          Text(
+                            "Visit Profile",
+                          ),
+                        ],
+                      )
+                    ],
+                  ),
+                ),
+              ),
+              DividerWidget(),
+              SizedBox(
+                height: 12.0,
+              ),
+
+              //Drawer Body Controllers
+              ListTile(
+                leading: Icon(Icons.history),
+                title: Text(
+                  "History",
+                  style: TextStyle(fontSize: 15.0),
+                ),
+              ),
+              ListTile(
+                leading: Icon(Icons.person),
+                title: Text(
+                  "Visit Profile",
+                  style: TextStyle(fontSize: 15.0),
+                ),
+              ),
+              ListTile(
+                leading: Icon(Icons.info),
+                title: Text(
+                  "About",
+                  style: TextStyle(fontSize: 15.0),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
       body: Stack(
         children: [
@@ -31,17 +132,58 @@ class _MainScreenState extends State<MainScreen> {
             initialCameraPosition: _kGooglePlex,
             mapType: MapType.normal,
             myLocationButtonEnabled: true,
+            myLocationEnabled: true,
+            zoomGesturesEnabled: true,
+            zoomControlsEnabled: true,
             onMapCreated: (GoogleMapController controller) {
               _controllerGoogleMap.complete(controller);
               newGoogleMapController = controller;
+              setState(() {
+                bottomPaddingOfMap = 300.0;
+              });
+
+              locatePosition();
             },
           ),
+
+          //Hamburger BUtton for drawer
+          Positioned(
+            top: 45.0,
+            left: 22.0,
+            child: GestureDetector(
+              onTap: () {
+                scaffoldKey.currentState.openDrawer();
+              },
+              child: Container(
+                decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(22.0),
+                    boxShadow: [
+                      BoxShadow(
+                          color: Colors.black,
+                          blurRadius: 6.0,
+                          spreadRadius: 0.5,
+                          offset: Offset(0.7, 0.7))
+                    ]),
+                child: CircleAvatar(
+                  backgroundColor: Colors.white,
+                  child: Icon(
+                    Icons.menu,
+                    color: Colors.black,
+                  ),
+                  radius: 20.0,
+                ),
+              ),
+            ),
+          ),
+
+          //Positioned popup
           Positioned(
             left: 0.0,
             right: 0.0,
             bottom: 0.0,
             child: Container(
-              height: 320.0,
+              height: 300.0,
               decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.only(
@@ -92,19 +234,22 @@ class _MainScreenState extends State<MainScreen> {
                               offset: Offset(0.7, 0.7),
                             )
                           ]),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.search,
-                            color: Colors.black,
-                          ),
-                          SizedBox(
-                            width: 10.0,
-                          ),
-                          Text(
-                            "Search Drop off Location",
-                          ),
-                        ],
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.search,
+                              color: Colors.grey[500],
+                            ),
+                            SizedBox(
+                              width: 10.0,
+                            ),
+                            Text(
+                              "Search Drop off Location",
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                     SizedBox(
@@ -137,6 +282,10 @@ class _MainScreenState extends State<MainScreen> {
                         )
                       ],
                     ),
+                    SizedBox(
+                      height: 12.0,
+                    ),
+                    DividerWidget(),
                     SizedBox(
                       height: 12.0,
                     ),
